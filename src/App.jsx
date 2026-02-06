@@ -15,7 +15,8 @@ function getMood(value) {
     MOOD_LABELS[0];
 }
 
-const MAX_POINTS = 1400;
+const MAX_POINTS = 12000;
+const FADE_DURATION = 30000;
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -73,13 +74,17 @@ export default function App() {
     const height = window.innerHeight;
     scribbleRef.current = {
       points: [],
-      pen: {
-        x: width * 0.5 + (Math.random() - 0.5) * width * 0.2,
-        y: height * 0.5 + (Math.random() - 0.5) * height * 0.2,
-        angle: Math.random() * Math.PI * 2,
-      },
+      pen: null,
       seed: Math.random() * 1000,
     };
+    if (width && height) {
+      const margin = Math.min(width, height) * 0.12;
+      scribbleRef.current.pen = {
+        x: margin + Math.random() * (width - margin * 2),
+        y: margin + Math.random() * (height - margin * 2),
+        angle: Math.random() * Math.PI * 2,
+      };
+    }
   };
 
   const animateCanvas = () => {
@@ -91,32 +96,31 @@ export default function App() {
 
     const moodFactor = moodRef.current;
     const intensity = reducedMotionRef.current ? moodFactor * 0.5 : moodFactor;
-    const time = performance.now() * 0.001;
+    const now = performance.now();
+    const time = now * 0.001;
 
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, width, height);
 
     const scribble = scribbleRef.current;
-    const centerX = width * 0.5;
-    const centerY = height * 0.5;
-    const baseRadius = Math.min(width, height) * (0.28 + intensity * 0.2);
     const paintActive =
       listeningRef.current && permissionRef.current === "granted";
     const paintFactor = paintActive ? Math.max(0, moodFactor - 0.02) : 0;
     const speedScale = reducedMotionRef.current ? 0.6 : 1;
 
     if (!scribble.pen) {
+      const margin = Math.min(width, height) * 0.12;
       scribble.pen = {
-        x: centerX,
-        y: centerY,
+        x: margin + Math.random() * (width - margin * 2),
+        y: margin + Math.random() * (height - margin * 2),
         angle: Math.random() * Math.PI * 2,
       };
     }
 
-    if (paintFactor > 0) {
+    if (paintFactor > 0 && scribble.pen) {
       const pen = scribble.pen;
-      const steps = Math.max(1, Math.floor(paintFactor * 8));
+      const steps = Math.max(1, Math.floor(paintFactor * 14));
       const margin = Math.min(width, height) * 0.12;
       const seed = scribble.seed ?? 0;
 
@@ -124,10 +128,10 @@ export default function App() {
         const flow =
           Math.sin((pen.x + seed) * 0.004 + time * 0.6) +
           Math.cos((pen.y - seed) * 0.003 + time * 0.5);
-        const turn = flow * (0.04 + paintFactor * 0.22);
+        const turn = flow * (0.05 + paintFactor * 0.3);
         pen.angle += turn;
 
-        const speed = (0.8 + paintFactor * 4.2) * speedScale;
+        const speed = (0.9 + paintFactor * 5.8) * speedScale;
         pen.x += Math.cos(pen.angle) * speed;
         pen.y += Math.sin(pen.angle) * speed;
 
@@ -142,12 +146,13 @@ export default function App() {
 
         const thickness =
           3 +
-          paintFactor * 22 +
-          Math.sin(time * 2 + pen.angle) * (2 + paintFactor * 6);
+          paintFactor * 28 +
+          Math.sin(time * 2 + pen.angle) * (2 + paintFactor * 9);
         scribble.points.push({
           x: pen.x,
           y: pen.y,
           w: thickness,
+          born: now,
           seed: Math.random() * Math.PI * 2,
         });
       }
@@ -157,91 +162,45 @@ export default function App() {
       }
     }
 
+    if (scribble.points.length > 0) {
+      let removeCount = 0;
+      while (
+        removeCount < scribble.points.length &&
+        now - scribble.points[removeCount].born > FADE_DURATION
+      ) {
+        removeCount += 1;
+      }
+      if (removeCount > 0) {
+        scribble.points.splice(0, removeCount);
+      }
+    }
+
     if (scribble.points.length > 1) {
-      const seed = scribble.seed ?? 0;
-      const noiseAmp = 1 + intensity * 14;
-      const pressRadius = baseRadius * (0.35 + intensity * 0.4);
-      const pressStrength = baseRadius * (0.012 + intensity * 0.06);
-      const pressA = {
-        x: centerX + Math.cos(time * 0.4) * baseRadius * 0.5,
-        y: centerY + Math.sin(time * 0.33) * baseRadius * 0.4,
-      };
-      const pressB = {
-        x: centerX + Math.cos(time * 0.22 + 1.7) * baseRadius * 0.35,
-        y: centerY + Math.sin(time * 0.28 + 0.9) * baseRadius * 0.3,
-      };
-
-      const applyPress = (x, y, px, py, strength, radius) => {
-        const dx = x - px;
-        const dy = y - py;
-        const distance = Math.hypot(dx, dy);
-        if (distance < radius) {
-          const falloff = 1 - distance / radius;
-          const press = strength * falloff * falloff;
-          const nx = dx / (distance + 0.001);
-          const ny = dy / (distance + 0.001);
-          x -= nx * press;
-          y -= ny * press;
-          x += -ny * press * 0.25;
-          y += nx * press * 0.25;
-          return { x, y, pressure: falloff };
-        }
-        return { x, y, pressure: 0 };
-      };
-
-      const warpPoint = (point, offset) => {
-        let x = point.x;
-        let y = point.y;
-
-        x +=
-          Math.sin(time * 0.8 + (x + seed) * 0.005 + offset) * noiseAmp;
-        y +=
-          Math.cos(time * 0.7 + (y - seed) * 0.004 - offset) * noiseAmp;
-
-        const dx = x - centerX;
-        const dy = y - centerY;
-        const twist =
-          Math.sin(time * 0.3 + (dx + dy) * 0.002) * intensity * 0.12;
-        x += -dy * twist;
-        y += dx * twist;
-
-        let pressure = 0;
-        const press1 = applyPress(x, y, pressA.x, pressA.y, pressStrength, pressRadius);
-        x = press1.x;
-        y = press1.y;
-        pressure = Math.max(pressure, press1.pressure);
-
-        if (intensity > 0.3) {
-          const press2 = applyPress(x, y, pressB.x, pressB.y, pressStrength * 0.7, pressRadius * 0.85);
-          x = press2.x;
-          y = press2.y;
-          pressure = Math.max(pressure, press2.pressure);
-        }
-
-        return { x, y, pressure };
-      };
-
       ctx.save();
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
 
       const passes = [
-        { alpha: 0.25, width: 1.9, offset: 0.6 },
-        { alpha: 0.95, width: 1, offset: 0 },
+        { alpha: 0.25, width: 1.8 },
+        { alpha: 0.95, width: 1 },
       ];
 
       passes.forEach((pass) => {
         for (let i = 1; i < scribble.points.length; i += 1) {
-          const prev = warpPoint(scribble.points[i - 1], pass.offset);
-          const next = warpPoint(scribble.points[i], pass.offset);
+          const prevPoint = scribble.points[i - 1];
+          const nextPoint = scribble.points[i];
+          const prev = { x: prevPoint.x, y: prevPoint.y };
+          const next = { x: nextPoint.x, y: nextPoint.y };
+          const age = now - nextPoint.born;
+          const alphaFade = Math.max(0, 1 - age / FADE_DURATION);
+          if (alphaFade <= 0) continue;
           const baseWidth = (scribble.points[i].w + scribble.points[i - 1].w) * 0.5;
           const wobble =
             0.7 + 0.3 * Math.sin(time * 1.4 + scribble.points[i].seed);
           const width =
-            Math.max(1.5, baseWidth * (1 + next.pressure * (0.6 + intensity)) * wobble) *
-            pass.width;
+            Math.max(1.5, baseWidth * wobble) * pass.width;
 
-          ctx.strokeStyle = `rgba(0, 0, 0, ${pass.alpha})`;
+          ctx.strokeStyle = `rgba(0, 0, 0, ${pass.alpha * alphaFade})`;
           ctx.lineWidth = width;
           ctx.beginPath();
           ctx.moveTo(prev.x, prev.y);
@@ -342,7 +301,7 @@ export default function App() {
   }, [isListening, sensitivity]);
 
   const startListening = async () => {
-    setStatusMessage("Listening… use your voice to draw.");
+    setStatusMessage("Listening… drawing the sound.");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -412,7 +371,7 @@ export default function App() {
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span className="font-medium">Mic level</span>
+                      <span className="font-medium">Level</span>
                       <span className="tabular-nums">{level.toFixed(2)}</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
