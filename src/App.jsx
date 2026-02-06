@@ -432,6 +432,37 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {showSettings && (
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <a
+                    className="pointer-events-auto font-medium text-slate-500 transition-colors hover:text-slate-700"
+                    href="https://x.com/panglozano"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Made by Antonio Lozano
+                  </a>
+                  <div className="flex items-center gap-3">
+                    <a
+                      className="pointer-events-auto font-medium transition-colors hover:text-slate-600"
+                      href="https://github.com/tonioloz/Ommmm"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Repository
+                    </a>
+                    <a
+                      className="pointer-events-auto font-medium transition-colors hover:text-slate-600"
+                      href="https://github.com/tonioloz"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
