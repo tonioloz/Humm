@@ -442,7 +442,7 @@ export default function App() {
               )}
 
               {showSettings && (
-                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center justify-between text-[8px] text-slate-400">
                   <a
                     className="pointer-events-auto font-medium text-slate-500 transition-colors hover:text-slate-700"
                     href="https://x.com/panglozano"

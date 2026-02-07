@@ -12,6 +12,10 @@ body,
   height: 100%;
 }
 
+html {
+  font-size: 80%;
+}
+
 body {
   font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
 }
