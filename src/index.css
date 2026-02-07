@@ -14,10 +14,12 @@ body,
 
 html {
   font-size: 80%;
+  background-color: #ffffff;
 }
 
 body {
   font-family: "Sora", ui-sans-serif, system-ui, sans-serif;
+  background-color: #ffffff;
 }
 
 canvas {
