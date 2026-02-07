@@ -19,8 +19,16 @@
     <meta property="og:url" content="https://www.ommmm.xyz/" />
     <meta
       property="og:image"
-      content="https://www.ommmm.xyz/ommmm.png"
+      content="https://www.ommmm.xyz/og.png?v=3"
     />
+    <meta property="og:image" content="https://www.ommmm.xyz/og.png" />
+    <meta
+      property="og:image:secure_url"
+      content="https://www.ommmm.xyz/og.png?v=3"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Ommmm audio-reactive canvas" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Ommmm" />
@@ -30,8 +38,9 @@
     />
     <meta
       name="twitter:image"
-      content="https://www.ommmm.xyz/ommmm.png"
+      content="https://www.ommmm.xyz/og.png?v=3"
     />
+    <meta name="twitter:image:alt" content="Ommmm audio-reactive canvas" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -39,6 +48,19 @@
       href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap"
       rel="stylesheet"
     />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-3RXRFG6ZLN"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-3RXRFG6ZLN");
+    </script>
   </head>
   <body class="bg-white text-slate-900">
     <div id="root"></div>
