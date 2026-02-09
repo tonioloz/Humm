@@ -1,5 +1,7 @@
 # Ommmm
 
+![Ommmm preview](./public/ommmm.png)
+
 Ommmm es un generador de dibujos a partir de sonidos. Activa el micrófono y observa cómo el lienzo reacciona en tiempo real a la intensidad del audio.
 
 ## Qué hace
